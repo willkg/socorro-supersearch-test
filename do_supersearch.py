@@ -2,6 +2,7 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
+import datetime
 import os
 
 import click
@@ -9,12 +10,11 @@ from crashstats_tools.libcrashstats import supersearch, supersearch_facet
 import requests
 
 
-HOST = "https://crash-stats.allizom.org/"
 DATE_VALUE = [">=2024-06-24", "<2024-06-25"]
 
 
-def get_supersearch_fields():
-    resp = requests.get(f"{HOST}api/SuperSearchFields/")
+def get_supersearch_fields(host):
+    resp = requests.get(f"{host}api/SuperSearchFields/")
     resp.raise_for_status()
     data = resp.json()
     fields = []
@@ -30,13 +30,13 @@ def get_supersearch_fields():
     return fields
 
 
-def get_field_values(api_token, field):
+def get_field_values(api_token, host, field):
     resp = supersearch_facet(
         params={
             "_facets": field,
             "date": DATE_VALUE,
         },
-        host=HOST,
+        host=host,
         api_token=api_token,
     )
     if field not in resp["facets"]:
@@ -49,14 +49,36 @@ def get_field_values(api_token, field):
 
 
 @click.command
+@click.option(
+    "--environment",
+    show_default=True,
+    type=click.Choice(["local", "stage", "prod"]),
+    prompt=True,
+)
 @click.pass_context
-def main(ctx):
-    api_token = os.environ.get("CRASHSTATS_API_TOKEN")
+def main(ctx, environment):
+    if environment == "local":
+        api_token_var = "LOCAL_API_TOKEN"
+        host = "http://localhost:8000/"
+    elif environment == "stage":
+        api_token_var = "STAGE_API_TOKEN"
+        host = "https://crash-stats.allizom.org/"
+    elif environment == "prod":
+        api_token_var = "PROD_API_TOKEN"
+        host = "https://crash-stats.mozilla.org/"
+
+    api_token = os.environ.get(api_token_var)
     if not api_token:
         click.echo("Need to set CRASHSTATS_API_TOKEN. Exiting.", err=True)
         ctx.exit(1)
 
-    fields = sorted(get_supersearch_fields())
+    click.echo("---------------------------------------------------------")
+    click.echo(f"Host:      {host}")
+    click.echo(f"API token: {'*' * (len(api_token) - 4)}{api_token[-4:]}")
+    click.echo(f"Date:      {datetime.datetime.now()}")
+    click.echo("---------------------------------------------------------")
+
+    fields = sorted(get_supersearch_fields(host=host))
 
     # For each field
     for field in fields:
@@ -73,7 +95,7 @@ def main(ctx):
             # trying to fix
             values = ["Mac OS X", "Windows", "Linux"]
         else:
-            values = get_field_values(api_token=api_token, field=field)
+            values = get_field_values(api_token=api_token, host=host, field=field)
 
         if not values:
             click.echo("no data")
@@ -92,7 +114,7 @@ def main(ctx):
                             "_columns": ["uuid", field],
                             "date": DATE_VALUE,
                         },
-                        host=HOST,
+                        host=host,
                         num_results=5,
                         api_token=api_token,
                     )
@@ -112,7 +134,7 @@ def main(ctx):
                         "_columns": ["uuid", field],
                         "date": DATE_VALUE,
                     },
-                    host=HOST,
+                    host=host,
                     num_results=5,
                     api_token=api_token,
                 )

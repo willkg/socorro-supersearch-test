@@ -10,8 +10,24 @@ I build this to test out supersearch queries across all supersearch fields.
 
 # How?
 
-First, set `CRASHSTATS_API_TOKEN` to an API token for the environment you're
-testing.
+First do:
+
+```
+make .env
+```
+
+to copy the env template over.
+
+Then in your `.env` file, set the token variables for the environments you're
+going to use.
+
+Then do:
+
+```
+make build_venv
+```
+
+To build a Python virtual environment to run the script in.
 
 Then run the script:
 
@@ -19,10 +35,4 @@ Then run the script:
 make run
 ```
 
-That will build a new virtual environment and run the script in it.
-
-To rebuild the virtual environment:
-
-```
-make build_venv
-```
+It will prompt you for which environment to run against: local, stage, or prod.
