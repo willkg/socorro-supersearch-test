@@ -7,7 +7,7 @@ README
 :Issues: https://github.com/willkg/socorro-supersearch-test/issues
 
 
-WHy?
+Why?
 ====
 
 I build this to test out supersearch queries across all supersearch fields.
