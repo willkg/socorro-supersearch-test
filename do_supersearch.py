@@ -42,7 +42,9 @@ def get_field_values(api_token, host, field):
     if field not in resp["facets"]:
         return None
 
-    facet_data = sorted(resp["facets"][field], key=lambda item: item["count"], reverse=True)
+    facet_data = sorted(
+        resp["facets"][field], key=lambda item: item["count"], reverse=True
+    )
     data = [item["term"] for item in facet_data[:3]]
     data.sort()
     return data
