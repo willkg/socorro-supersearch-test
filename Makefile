@@ -19,6 +19,10 @@ help:
 	python -m venv .venv
 	.venv/bin/pip install -r requirements.txt
 
+.PHONY: clean
+clean:  ## Clean the gunk out of the gasket
+	-rm -rf .venv
+
 .PHONY: build_venv
 build_venv:  ## Rebild the virtual environment
 	-rm -rf .venv
