@@ -53,7 +53,6 @@ def get_field_values(api_token, host, field):
 @click.command
 @click.option(
     "--environment",
-    show_default=True,
     type=click.Choice(["local", "stage", "prod"]),
     prompt=True,
 )
